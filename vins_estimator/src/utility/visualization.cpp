@@ -2,6 +2,8 @@
 
 using namespace ros;
 using namespace Eigen;
+
+ros::Publisher pub_state;
 ros::Publisher pub_odometry, pub_latest_odometry;
 ros::Publisher pub_path, pub_relo_path;
 ros::Publisher pub_point_cloud, pub_margin_cloud;
@@ -22,6 +24,7 @@ static Vector3d last_path(0.0, 0.0, 0.0);
 
 void registerPub(ros::NodeHandle &n)
 {
+    pub_state = n.advertise<cassie_msgs::State>("state", 1000);
     pub_latest_odometry = n.advertise<nav_msgs::Odometry>("imu_propagate", 1000);
     pub_path = n.advertise<nav_msgs::Path>("path", 1000);
     pub_relo_path = n.advertise<nav_msgs::Path>("relocalization_path", 1000);
@@ -124,6 +127,21 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
         odometry.twist.twist.linear.y = estimator.Vs[WINDOW_SIZE].y();
         odometry.twist.twist.linear.z = estimator.Vs[WINDOW_SIZE].z();
         pub_odometry.publish(odometry);
+
+        // Publish state msg
+        cassie_msgs::State state;
+        state.header = odometry.header;
+        state.pose = odometry.pose.pose;
+        state.velocity.x = odometry.twist.twist.linear.x;
+        state.velocity.y = odometry.twist.twist.linear.y;
+        state.velocity.z = odometry.twist.twist.linear.z;
+        state.accelerometer_bias.x = estimator.Bas[WINDOW_SIZE].x();
+        state.accelerometer_bias.y = estimator.Bas[WINDOW_SIZE].y();
+        state.accelerometer_bias.z = estimator.Bas[WINDOW_SIZE].z();
+        state.gyroscope_bias.x = estimator.Bgs[WINDOW_SIZE].x();
+        state.gyroscope_bias.y = estimator.Bgs[WINDOW_SIZE].y();
+        state.gyroscope_bias.z = estimator.Bgs[WINDOW_SIZE].z();
+        pub_state.publish(state);
 
         geometry_msgs::PoseStamped pose_stamped;
         pose_stamped.header = header;

@@ -24,6 +24,8 @@
 #define SKIP_FIRST_CNT 10
 using namespace std;
 
+string fixed_id = "/odom";
+
 queue<sensor_msgs::ImageConstPtr> image_buf;
 queue<sensor_msgs::PointCloudConstPtr> point_buf;
 queue<nav_msgs::Odometry::ConstPtr> pose_buf;
@@ -234,7 +236,7 @@ void vio_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
 
     visualization_msgs::Marker key_odometrys;
     key_odometrys.header = pose_msg->header;
-    key_odometrys.header.frame_id = "world";
+    key_odometrys.header.frame_id = fixed_id;
     key_odometrys.ns = "key_odometrys";
     key_odometrys.type = visualization_msgs::Marker::SPHERE_LIST;
     key_odometrys.action = visualization_msgs::Marker::ADD;
@@ -267,12 +269,12 @@ void vio_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
     {
         geometry_msgs::PoseStamped pose_stamped;
         pose_stamped.header = pose_msg->header;
-        pose_stamped.header.frame_id = "world";
+        pose_stamped.header.frame_id = fixed_id;
         pose_stamped.pose.position.x = vio_t.x();
         pose_stamped.pose.position.y = vio_t.y();
         pose_stamped.pose.position.z = vio_t.z();
         no_loop_path.header = pose_msg->header;
-        no_loop_path.header.frame_id = "world";
+        no_loop_path.header.frame_id = fixed_id;
         no_loop_path.poses.push_back(pose_stamped);
         pub_vio_path.publish(no_loop_path);
     }
